@@ -1,0 +1,22 @@
+version: "3.4"
+
+networks:
+  default:
+
+services:
+  python-project:
+    container_name: python-project
+    build:
+      context: .
+      dockerfile: deployment/Dockerfile
+      args:
+        USER_ID: ${UID:-1000}
+        GROUP_ID: ${GID:-1000}
+        RUN_LEVEL: prod
+        PYTHON_VERSION: "3.9"
+      target: prod
+    volumes:
+      - .:/opt/app
+    restart: unless-stopped
+    env_file:
+      - .env.prod
