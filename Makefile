@@ -1,5 +1,5 @@
 # Vars
-CODE_DIR = python_project
+CODE_DIR =  bot
 PYTHONPATH = PYTHONPATH=./:$(CODE_DIR)
 
 # Executables

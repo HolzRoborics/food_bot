@@ -1,10 +1,9 @@
 from logging.config import fileConfig
 
 from alembic import context
+from databases import Base
 from settings import postgres_settings
 from sqlalchemy import engine_from_config, pool
-
-from databases import Base
 
 config = context.config
 config.set_main_option("sqlalchemy.url", postgres_settings.ALEMBIC_URI)

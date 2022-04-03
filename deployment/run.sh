@@ -4,4 +4,4 @@ set -e
 python pre_start.py
 
 echo "STARTING"
-python -m project
+python -m food_bot

@@ -22,7 +22,7 @@ WORKDIR /opt/app
 RUN poetry install $(if [ "${RUN_LEVEL}" = "production" ]; then echo "--no-dev"; fi ) --no-interaction --no-ansi -vvv
 
 # Application
-COPY python_project ./python_project
+COPY bot ./bot
 
 COPY deployment/pre_start.py ./
 COPY deployment/run.sh ./
@@ -46,6 +46,6 @@ RUN poetry config virtualenvs.create false
 
 RUN echo "export PATH=\$PATH:~/.local/bin" > /home/user/.bashrc
 
-ENV PYTHONPATH=/opt/app/python_project
+ENV PYTHONPATH=/opt/app/bot
 
-CMD ["watchmedo", "auto-restart", "--directory=./", "--pattern=*.py", "--", "python", "-m", "project"]
+CMD ["watchmedo", "auto-restart", "--directory=./", "--pattern=*.py", "--", "python", "-m", "food_bot"]

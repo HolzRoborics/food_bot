@@ -6,9 +6,11 @@ class ToolConfig:
     extra = "ignore"
 
 
-class ProjectSettings(BaseSettings):
+class BotSettings(BaseSettings):
+    TOKEN: str
+
     class Config(ToolConfig):
-        env_prefix = "project_"
+        env_prefix = "bot_"
 
 
 class PostgresSettings(BaseSettings):
@@ -21,5 +23,13 @@ class PostgresSettings(BaseSettings):
         env_prefix = "postgres_"
 
 
-project_settings = ProjectSettings()
+class RedisSettings(BaseSettings):
+    URI: str
+
+    class Config(ToolConfig):
+        env_prefix = "redis_"
+
+
+bot_settings = BotSettings()
 postgres_settings = PostgresSettings()
+redis_settings = RedisSettings()
