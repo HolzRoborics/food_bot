@@ -19,6 +19,7 @@ redis = "^4.2.1"
 aioredis = "^2.0.1"
 pandas = "^1.4.2"
 openpyxl = "^3.0.9"
+emoji = "^1.7.0"
 
 [tool.poetry.dev-dependencies]
 

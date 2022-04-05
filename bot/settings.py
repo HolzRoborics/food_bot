@@ -8,6 +8,7 @@ class ToolConfig:
 
 class BotSettings(BaseSettings):
     TOKEN: str
+    ITEMS_PER_PAGE: int = 8
 
     class Config(ToolConfig):
         env_prefix = "bot_"

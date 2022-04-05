@@ -9,6 +9,11 @@ ENV PIP_NO_CACHE_DIR=off
 ENV PYTHONDONTWRITEBYTECODE=on
 ENV PYTHONFAULTHANDLER=on
 ENV PYTHONUNBUFFERED=on
+ENV PYTHONPATH=/opt/app/bot
+
+# Set timezone
+ENV TZ=Europe/Moscow
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential nano telnet curl \
@@ -26,9 +31,9 @@ COPY bot ./bot
 
 COPY deployment/pre_start.py ./
 COPY deployment/run.sh ./
-RUN chmod +x run.sh
+RUN chmod +x ./run.sh
 
-CMD ["./run.sh"]
+CMD ./run.sh
 
 
 FROM prod as dev
@@ -45,7 +50,5 @@ USER user
 RUN poetry config virtualenvs.create false
 
 RUN echo "export PATH=\$PATH:~/.local/bin" > /home/user/.bashrc
-
-ENV PYTHONPATH=/opt/app/bot
 
 CMD ["watchmedo", "auto-restart", "--directory=./", "--pattern=*.py", "--", "python", "-m", "food_bot"]

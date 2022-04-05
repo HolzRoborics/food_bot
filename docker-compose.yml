@@ -22,6 +22,7 @@ services:
       - .env.local
     depends_on:
       - postgres
+      - redis
 
   postgres:
     container_name: postgres
@@ -29,6 +30,8 @@ services:
     ports:
       - "5432:5432"
     environment:
+      TZ: 'GMT+3'
+      PGTZ: 'GMT+3'
       POSTGRES_PASSWORD: password
       POSTGRES_USER: user
       POSTGRES_DB: db_name

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Numeric
+from sqlalchemy import Column, Numeric, String
 
 from .. import Base
 from .base import BaseMixin

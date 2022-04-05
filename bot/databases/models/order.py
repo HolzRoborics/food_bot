@@ -1,15 +1,18 @@
-from sqlalchemy import Column, Integer, ForeignKey, BigInteger
+from sqlalchemy import BigInteger, Column, ForeignKey, Integer, DateTime, func
 from sqlalchemy.orm import relationship
 
 from .. import Base
 from .base import BaseMixin
-from .user import User
 from .food import Food
+from .user import User
 
 
 class Order(BaseMixin, Base):
-    scud_id = Column(BigInteger, ForeignKey(User.scud_id, ondelete='CASCADE'), nullable=False)
+    scud_id = Column(
+        BigInteger, ForeignKey(User.scud_id, ondelete="CASCADE"), nullable=False
+    )
     user = relationship(User)
-    food_id = Column(Integer, ForeignKey(Food.id, ondelete='CASCADE'), nullable=False)
+    food_id = Column(Integer, ForeignKey(Food.id, ondelete="CASCADE"), nullable=False)
     food = relationship(Food)
     quantity = Column(Integer, nullable=False)
+    datetime = Column(DateTime, server_default=func.now())
