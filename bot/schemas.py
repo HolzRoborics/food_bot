@@ -1,10 +1,11 @@
-from typing import Iterable, List
+from typing import List
 
 from databases import Session, User, Food
 from pydantic import BaseModel
 from sqlalchemy.future import select
 from sqlalchemy.engine import Result
 
+from utils import food_filter
 from settings import bot_settings
 
 
@@ -38,7 +39,6 @@ class FoodModel(BaseModel):
         async with Session() as session:
             stmt = select(Food).where(Food.id == food_id)
             result = await session.execute(stmt)
-
         return cls.from_orm(result.scalars().first())
 
 
@@ -66,7 +66,8 @@ class PaginatedList(BaseModel):
     @classmethod
     def from_db_result(cls, objects: Result) -> 'PaginatedList':
         foods = [FoodModel.from_orm(row) for row in objects.scalars()]
-        food_list = FoodList(__root__=foods)
+        filtered_foods = [food for food in foods if food_filter(food)]
+        food_list = FoodList(__root__=filtered_foods)
         return cls(all_items=food_list)
 
     @property

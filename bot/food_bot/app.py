@@ -2,11 +2,12 @@ import logging
 from collections import Counter
 from urllib.parse import urlparse
 
+import aiogram.utils.markdown as md
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.contrib.fsm_storage.redis import RedisStorage2
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, ParseMode
 from aiogram.utils.emoji import emojize
 from sqlalchemy.future import select
 
@@ -87,7 +88,15 @@ async def cmd_back(call: CallbackQuery, state: FSMContext):
 
 @dp.message_handler()
 async def echo(message: types.Message):
-    await message.answer(message.text)
+    help_message = md.text(
+        md.text('Вас приветствует бот для заказа еды!'),
+        md.text('Вот список доступных команд:'),
+        md.text(md.bold('/start'), ' - Сделать заказ'),
+        md.text(md.bold('/cancel'), ' - Отмена'),
+        sep='\n',
+    )
+
+    await message.answer(text=help_message, parse_mode=ParseMode.MARKDOWN, reply=False)
 
 
 @dp.callback_query_handler(lambda call: call.data.startswith("select_position"), state=[Form.start, Form.select])
@@ -109,13 +118,11 @@ async def handle_category(call: CallbackQuery, state: FSMContext):
 
     kb = get_position_keyboard(paginated_food)
 
-    await bot.delete_message(
-        chat_id=call.from_user.id, message_id=call.message.message_id
-    )
-
-    await call.message.reply(
-        text=f"Выберите позицию:", reply_markup=kb, reply=False
-    )
+    if '/' in call.data:
+        await bot.edit_message_reply_markup(call.from_user.id, call.message.message_id, reply_markup=kb)
+    else:
+        await bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)
+        await call.message.reply(text=f"Выберите позицию:", reply_markup=kb, reply=False)
 
 
 @dp.callback_query_handler(lambda call: call.data.startswith("position"), state=Form.select)
@@ -215,5 +222,5 @@ async def process_order(call: CallbackQuery, state: FSMContext):
 
 
 def main():
-    # dp.setup_middleware(AuthMiddleware())
+    dp.setup_middleware(AuthMiddleware())
     executor.start_polling(dp, skip_updates=True)
