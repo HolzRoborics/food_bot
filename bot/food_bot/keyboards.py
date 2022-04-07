@@ -3,6 +3,13 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.emoji import emojize
 
 
+def get_categories_keyboard(categories):
+    kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(
+        text=f'{category.name}', callback_data=f"category_{category.id}"
+    )] for category in categories])
+    return kb
+
+
 def get_position_keyboard(paginated_food):
     arrows = []
     if paginated_food.has_previous_page:
@@ -11,25 +18,27 @@ def get_position_keyboard(paginated_food):
         ))
     if paginated_food.has_next_page:
         arrows.append(InlineKeyboardButton(
-            text=emojize(':arrow_forward:'), callback_data=f"select_position/next"
+            text=emojize(':arrow_forward:'), callback_data=f"category/next"
         ))
     buttons = [*[[InlineKeyboardButton(
         text=f'{position.name} - {position.price} руб', callback_data=f"position/{position.id}"
-    )] for position in paginated_food.page_items] + [arrows]]
+    )] for position in paginated_food.page_items] + [arrows] +
+                [[InlineKeyboardButton(text="Назад", callback_data="select_category")]]]
 
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
 def get_confirmation_keyboard():
-    kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Заказ подтверждаю", callback_data="process_order"),
-                                                    InlineKeyboardButton(text="Отмена", callback_data="back")]])
+    kb = InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text="Заказ подтверждаю", callback_data="process_order"),
+                          InlineKeyboardButton(text="Отмена", callback_data="back")]])
     return kb
 
 
 async def get_main_menu(state: FSMContext):
     actions = InlineKeyboardMarkup()
     actions.add(
-        InlineKeyboardButton(text="Добавить позицию", callback_data="select_position")
+        InlineKeyboardButton(text="Добавить позицию", callback_data="select_category")
     )
     async with state.proxy() as data:
         if data.get("basket"):

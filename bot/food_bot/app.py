@@ -11,12 +11,12 @@ from aiogram.types import CallbackQuery, ParseMode
 from aiogram.utils.emoji import emojize
 from sqlalchemy.future import select
 
-from databases import Session, Food, Order
+from databases import Session, Food, Order, FoodCategory
 from settings import bot_settings, redis_settings
 from schemas import FoodModel, PaginatedList, UserModel
 
 from .fsm import Form
-from .keyboards import get_position_keyboard, get_confirmation_keyboard, get_main_menu
+from .keyboards import get_position_keyboard, get_confirmation_keyboard, get_main_menu, get_categories_keyboard
 from .middlewares import AuthMiddleware
 
 logging.basicConfig(level=logging.INFO)
@@ -60,15 +60,6 @@ async def cancel_handler(message: types.Message, state: FSMContext):
 async def cmd_start(message: types.Message, state: FSMContext):
     await Form.start.set()
 
-    async with Session() as session:
-        stmt = select(Food)
-        result = await session.execute(stmt)
-
-    paginated_food = PaginatedList.from_db_result(result)
-
-    async with state.proxy() as data:
-        data['paginated_food'] = paginated_food.json()
-
     actions = await get_main_menu(state)
 
     await message.reply(emojize("Привет! Давай закажем еду?:poultry_leg:"), reply=False)
@@ -99,14 +90,37 @@ async def echo(message: types.Message):
     await message.answer(text=help_message, parse_mode=ParseMode.MARKDOWN, reply=False)
 
 
-@dp.callback_query_handler(lambda call: call.data.startswith("select_position"), state=[Form.start, Form.select])
+@dp.callback_query_handler(lambda call: call.data.startswith("select_category"), state=[Form.start, Form.select])
 async def handle_category(call: CallbackQuery, state: FSMContext):
-    page = call.data.split("/")[-1]
-
     await Form.select.set()
 
-    async with state.proxy() as data:
-        paginated_food = PaginatedList.parse_raw(data['paginated_food'])
+    async with Session() as session:
+        result = await session.execute(select(FoodCategory))
+        categories = result.scalars()
+
+    kb = get_categories_keyboard(categories)
+
+    await bot.edit_message_text("Выберите категорию:", call.from_user.id, call.message.message_id)
+    await bot.edit_message_reply_markup(call.from_user.id, call.message.message_id, reply_markup=kb)
+
+
+@dp.callback_query_handler(lambda call: call.data.startswith("category"), state=[Form.start, Form.select])
+async def select_position(call: CallbackQuery, state: FSMContext):
+    page = call.data.split("/")[-1]
+
+    if "/" in call.data:
+        async with state.proxy() as data:
+            paginated_food = PaginatedList.parse_raw(data['paginated_food'])
+    else:
+        category_id = int(call.data.split("_")[1])
+
+        async with Session() as session:
+            stmt = select(Food).where(Food.category_id == category_id)
+            result = await session.execute(stmt)
+
+        paginated_food = PaginatedList.from_db_result(result)
+        async with state.proxy() as data:
+            data['paginated_food'] = paginated_food.json()
 
     if page == 'next':
         paginated_food.flip_next_page()
@@ -126,7 +140,7 @@ async def handle_category(call: CallbackQuery, state: FSMContext):
 
 
 @dp.callback_query_handler(lambda call: call.data.startswith("position"), state=Form.select)
-async def handle_category(call: CallbackQuery, state: FSMContext):
+async def add_position(call: CallbackQuery, state: FSMContext):
     position = int(call.data.split("/")[-1])
 
     async with state.proxy() as data:
