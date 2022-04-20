@@ -1,6 +1,7 @@
 import logging
 from collections import Counter
 from urllib.parse import urlparse
+from datetime import datetime
 
 import aiogram.utils.markdown as md
 from aiogram import Bot, Dispatcher, executor, types
@@ -230,7 +231,10 @@ async def process_order(call: CallbackQuery, state: FSMContext):
     await bot.delete_message(
         chat_id=call.from_user.id, message_id=call.message.message_id
     )
-    await call.message.reply(text="Заказ сделан:", reply=False)
+    await call.message.reply(
+        text=f'{datetime.now().strftime("%d/%m/%y")}'
+             f'\nЗаказ сделан:',
+        reply=False)
     message = await basket_message(basket)
     await call.message.reply(text=message, reply=False)
 
