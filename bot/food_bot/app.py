@@ -19,6 +19,7 @@ from schemas import FoodModel, PaginatedList, UserModel
 from .fsm import Form
 from .keyboards import get_position_keyboard, get_confirmation_keyboard, get_main_menu, get_categories_keyboard
 from .middlewares import AuthMiddleware
+from .utils import get_date
 
 logging.basicConfig(level=logging.INFO)
 
@@ -219,12 +220,14 @@ async def process_order(call: CallbackQuery, state: FSMContext):
 
     current_user = await UserModel.get_user(call.from_user.id)
     food_counter = Counter(basket)
+    date = get_date()
 
     async with Session() as session:
         for food_id, qty in food_counter.items():
             session.add(Order(scud_id=current_user.scud_id,
                               food_id=food_id,
-                              quantity=qty))
+                              quantity=qty,
+                              datetime=date))
         await session.commit()
 
     await state.finish()
@@ -232,7 +235,7 @@ async def process_order(call: CallbackQuery, state: FSMContext):
         chat_id=call.from_user.id, message_id=call.message.message_id
     )
     await call.message.reply(
-        text=f'{datetime.now().strftime("%d/%m/%y")}'
+        text=f'{date.strftime("%d/%m/%y")}'
              f'\nЗаказ сделан:',
         reply=False)
     message = await basket_message(basket)
