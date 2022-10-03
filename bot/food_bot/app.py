@@ -1,7 +1,6 @@
 import logging
 from collections import Counter
 from urllib.parse import urlparse
-from datetime import datetime
 
 import aiogram.utils.markdown as md
 from aiogram import Bot, Dispatcher, executor, types
@@ -19,7 +18,7 @@ from schemas import FoodModel, PaginatedList, UserModel
 from .fsm import Form
 from .keyboards import get_position_keyboard, get_confirmation_keyboard, get_main_menu, get_categories_keyboard
 from .middlewares import AuthMiddleware
-from .utils import get_date
+from utils import get_date, generate_order_uid
 
 logging.basicConfig(level=logging.INFO)
 
@@ -221,10 +220,12 @@ async def process_order(call: CallbackQuery, state: FSMContext):
     current_user = await UserModel.get_user(call.from_user.id)
     food_counter = Counter(basket)
     date = get_date()
+    uid = generate_order_uid(current_user.scud_id)
 
     async with Session() as session:
         for food_id, qty in food_counter.items():
             session.add(Order(scud_id=current_user.scud_id,
+                              order_id=uid,
                               food_id=food_id,
                               quantity=qty,
                               datetime=date))
